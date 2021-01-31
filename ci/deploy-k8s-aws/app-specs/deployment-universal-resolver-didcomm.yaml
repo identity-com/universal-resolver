@@ -22,7 +22,6 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8180
-        - containerPort: 8181
 ---
 apiVersion: v1
 kind: Service
@@ -33,11 +32,6 @@ spec:
   selector:
     app: universal-resolver-didcomm
   ports:
-    - name: http
-      protocol: TCP
+    - protocol: TCP
       port: 8180
       targetPort: 8180
-    - name: websocket
-      protocol: TCP
-      port: 8181
-      targetPort: 8181
