@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: uni-resolver-frontend
-  namespace: uni-resolver
+  namespace: did
   labels:
     app: uni-resolver
     type: frontend
@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: uni-resolver-frontend
-        image: universalresolver/universal-resolver-frontend
+        image: identitydotcom/universal-resolver-frontend
         imagePullPolicy: Always
         ports:
         - containerPort: 7081

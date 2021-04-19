@@ -9,7 +9,7 @@ from shutil import copy
 import pathlib
 
 # CONSTANTS you may need to change:
-DEFAULT_DOMAIN_NAME = 'dev.uniresolver.io'
+DEFAULT_DOMAIN_NAME = 'did.civic.com'
 UNIVERSAL_RESOLVER_FRONTEND_TAG = "universalresolver/uni-resolver-frontend:latest;"
 
 
@@ -19,16 +19,16 @@ def init_deployment_dir(outputdir):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
     fout = open(outputdir + '/' + 'deploy.sh', "a+")
-    fout.write('kubectl delete all --all -n uni-resolver\n')
+    fout.write('kubectl delete all --all -n did\n')
     fout.write('./namespace-setup.sh\n')
-    fout.write('kubectl apply -n uni-resolver -f uni-resolver-ingress.yaml\n')
+    fout.write('kubectl apply -n did -f uni-resolver-ingress.yaml\n')
     fout.close()
     subprocess.call(['chmod', "a+x", outputdir + '/' + 'deploy.sh'])
 
 
 def add_deployment(deployment_file, outputdir):
     fout = open(outputdir + '/' + 'deploy.sh', "a+")
-    fout.write('kubectl apply -n uni-resolver -f %s \n' % deployment_file)
+    fout.write('kubectl apply -n did -f %s \n' % deployment_file)
     fout.close()
 
 
@@ -86,17 +86,17 @@ def generate_ingress(containers, outputdir):
     global DEFAULT_DOMAIN_NAME
     print("Generating uni-resolver-ingress.yaml")
     fout = open(outputdir + '/uni-resolver-ingress.yaml', "wt")
-    fout.write('apiVersion: extensions/v1beta1\n')
+    fout.write('apiVersion: networking.k8s.io/v1\n')
     fout.write('kind: Ingress\n')
     fout.write('metadata:\n')
     fout.write('  name: \"uni-resolver-web\"\n')
-    fout.write('  namespace: \"uni-resolver\"\n')
+    fout.write('  namespace: \"did\"\n')
     fout.write('  annotations:\n')
-    fout.write('    kubernetes.io/ingress.class: alb\n')
-    fout.write('    alb.ingress.kubernetes.io/scheme: internet-facing\n')
-    fout.write('    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-2:332553390353:certificate/925fce37-d446-4af3-828e-f803b3746af0\n')
-    fout.write('    alb.ingress.kubernetes.io/listen-ports: \'[{"HTTP": 80}, {"HTTPS":443}]\'\n')
-    fout.write('    alb.ingress.kubernetes.io/actions.ssl-redirect: \'{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}\'\n')
+    fout.write('    nginx.ingress.kubernetes.io/rewrite-target: /$2\n')
+#     fout.write('    alb.ingress.kubernetes.io/scheme: internet-facing\n')
+#     fout.write('    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-2:332553390353:certificate/925fce37-d446-4af3-828e-f803b3746af0\n')
+#     fout.write('    alb.ingress.kubernetes.io/listen-ports: \'[{"HTTP": 80}, {"HTTPS":443}]\'\n')
+#     fout.write('    alb.ingress.kubernetes.io/actions.ssl-redirect: \'{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}\'\n')
     fout.write('  labels:\n')
     fout.write('    app: \"uni-resolver-web\"\n')
     fout.write('spec:\n')
@@ -104,18 +104,36 @@ def generate_ingress(containers, outputdir):
     fout.write('    - host: ' + DEFAULT_DOMAIN_NAME + '\n')
     fout.write('      http:\n')
     fout.write('        paths:\n')
-    fout.write('          - path: /*\n')
+    fout.write('          - path: /()(1.0/.*)\n')
+    fout.write('            pathType: ImplementationSpecific\n')
     fout.write('            backend:\n')
-    fout.write('              serviceName: ssl-redirect\n')
-    fout.write('              servicePort: use-annotation\n')
-    fout.write('          - path: /1.0/*\n')
+    fout.write('              service:\n')
+    fout.write('                name: uni-resolver-web\n')
+    fout.write('                port:\n')
+    fout.write('                  number: 8080\n')
+    fout.write('          - path: /()(.*)\n')
+    fout.write('            pathType: ImplementationSpecific\n')
     fout.write('            backend:\n')
-    fout.write('              serviceName: uni-resolver-web\n')
-    fout.write('              servicePort: 8080\n')
-    fout.write('          - path: /*\n')
+    fout.write('              service:\n')
+    fout.write('                name: uni-resolver-frontend\n')
+    fout.write('                port:\n')
+    fout.write('                  number: 7081\n')
+
+    fout.write('          - path: /registrar(/|$)(.*)\n')
+    fout.write('            pathType: ImplementationSpecific\n')
     fout.write('            backend:\n')
-    fout.write('              serviceName: uni-resolver-frontend\n')
-    fout.write('              servicePort: 7081\n')
+    fout.write('              service:\n')
+    fout.write('                name: uni-registrar-frontend\n')
+    fout.write('                port:\n')
+    fout.write('                  number: 8080\n')
+
+    fout.write('          - path: /registrar/()(1.0/.*)\n')
+    fout.write('            pathType: ImplementationSpecific\n')
+    fout.write('            backend:\n')
+    fout.write('              service:\n')
+    fout.write('                name: uni-registrar-web\n')
+    fout.write('                port:\n')
+    fout.write('                  number: 8080\n')
 
     for container in containers:
         print(container)
@@ -123,17 +141,17 @@ def generate_ingress(containers, outputdir):
         container_port = get_container_port(containers[container]['ports'])
         if container == 'uni-resolver-web':  # this is the default-name, hosted at: DEFAULT_DOMAIN_NAME
             continue
-        sub_domain_name = container.replace('did', '').replace('driver', '').replace('uni-resolver', '').replace('-',
+        subpath = container.replace('did', '').replace('driver', '').replace('uni-resolver', '').replace('-',
                                                                                                                    '')
-        print('Adding domain: ' + sub_domain_name + '.' + DEFAULT_DOMAIN_NAME)
+        print('Adding path: ' + subpath)
 
-        fout.write('    - host: ' + sub_domain_name + '.' + DEFAULT_DOMAIN_NAME + '\n')
-        fout.write('      http:\n')
-        fout.write('        paths:\n')
-        fout.write('          - path: /*\n')
+        fout.write('          - path: /' + subpath + '(/|$)(.*)\n')
+        fout.write('            pathType: ImplementationSpecific\n')
         fout.write('            backend:\n')
-        fout.write('              serviceName: ' + container + '\n')
-        fout.write('              servicePort: ' + container_port + '\n')
+        fout.write('              service:\n')
+        fout.write('                name: ' + container_name + '\n')
+        fout.write('                port:\n')
+        fout.write('                  number: ' + container_port + '\n')
 
     fout.close()
 
