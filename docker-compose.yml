@@ -85,10 +85,10 @@ services:
   #    image: sphereon/driver-did-factom:latest
   #    ports:
   #      - "8097:8080"
-#  driver-did-key:
-#    image: universalresolver/driver-did-key:latest
-#    ports:
-#      - "8098:8080"
+  driver-did-key:
+    image: universalresolver/driver-did-key:latest
+    ports:
+      - "8098:8080"
   #  dock-did-driver:
   #    image: docknetwork/dock-did-driver:latest
   #    ports:
@@ -197,13 +197,13 @@ services:
 #    image: halialabsdev/emtrust_did_driver:latest
 #    ports:
 #      - "8120:8080"
-#  driver-didkit:
-#    image: ghcr.io/spruceid/didkit-http:latest
-#    environment:
-#      PORT: 8080
-#      HOST: 0.0.0.0
-#    ports:
-#      - "8121:8080"
+  driver-didkit:
+    image: ghcr.io/spruceid/didkit-http:latest
+    environment:
+      PORT: 8080
+      HOST: 0.0.0.0
+    ports:
+      - "8121:8080"
 #  eosio-driver:
 #    container_name: eosio-driver
 #    image: gimlyblockchain/eosio-universal-resolver-driver
