@@ -14,11 +14,11 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Import Secrets
-      uses: hashicorp/vault-action@v2.1.1
+      uses: hashicorp/vault-action@v2.3.0
       with:
-        url: https://vault.danubetech.com
+        url: ${{ secrets.VAULT_ADDR }}
         token: ${{ secrets.CI_SECRET_READER_PERIODIC_TOKEN }}
-        tlsSkipVerify: true
+        caCertificate: ${{ secrets.VAULTCA }}
         secrets: |
           ci/data/gh-workflows/universal-resolver-cluster kube-config-data | KUBE_CONFIG_DATA ;
           ci/data/gh-workflows/universal-resolver-cluster aws-access-key-id | AWS_ACCESS_KEY_ID ;
@@ -34,14 +34,6 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{env.AWS_SECRET_ACCESS_KEY}}
         RPC_URL_TESTNET: ${{env.RPC_URL_TESTNET}}
         RPC_CERT_TESTNET: ${{env.RPC_CERT_TESTNET}}
-    - name: Sleep for 120 seconds
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '120s'
-    - name: Smoke Test
-      uses: ./ci/smoke-tests
-      with:
-        host: https://dev.uniresolver.io
     - name: Slack notification
       uses: 8398a7/action-slack@v3
       with:
