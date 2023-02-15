@@ -46,6 +46,7 @@ def generate_deployment_specs(containers, outputdir):
     for container in containers:
         container_tag = containers[container]['image']
         container_port = get_container_port(containers[container]['ports'])
+        container_env = containers[container]['environment'] if 'environment' in containers[container] else None
         fin = open("k8s-template.yaml", "rt")
         deployment_file = "deployment-%s.yaml" % container
         fout = open(outputdir + '/' + deployment_file, "wt")
@@ -55,9 +56,49 @@ def generate_deployment_specs(containers, outputdir):
         
         fin.close()
         fout.close()
+
+        add_driver_environment_variables(outputdir, container_env, container)
+
         # If there is a configmap-<driver>.yaml file, create a ConfigMap for it and add a volumeMounts mapping for it:
         add_driver_configmap_volume(outputdir, container)
         add_deployment(deployment_file, outputdir)
+
+def add_driver_environment_variables(outputdir, container_env, container):
+    """
+    If the container has environment variables defined in the docker-compose file,
+    add them here.
+    NOTE: This does not support variable substitution
+    """
+
+    deployment_file = "deployment-%s.yaml" % container
+    with open(outputdir + '/' + deployment_file, 'r') as infile:
+        input_deployment_contents = infile.read()
+
+    configmap_filename = 'configmap-%s.yaml' % container
+    configmap_path = '/app-specs/%s' % configmap_filename
+
+    if container_env is None:
+        print('No environment variables found for driver ' + container)
+        output_deployment_contents = input_deployment_contents.replace('{{environmentVariables}}', '')
+    else:
+        print('Environment variables found for driver ' + container + ' . Adding environment to the deployment yaml.')
+
+        # Write the environment definition to the driver Deployment spec:
+        env_txt = 'env:\n'
+
+        for env_var in container_env:
+            env_txt += '          - name: %s\n' % env_var
+            env_txt += '            value: \"%s\"\n' % container_env[env_var]
+
+        print(env_txt)
+
+        output_deployment_contents = input_deployment_contents.replace('{{environmentVariables}}', env_txt)
+
+        # tmp
+        print(output_deployment_contents)
+
+    with open(outputdir + '/' + deployment_file, 'w') as outfile:
+        outfile.write(output_deployment_contents)
 
 def add_driver_configmap_volume(outputdir, container):
     """

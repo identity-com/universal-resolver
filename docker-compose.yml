@@ -1,6 +1,6 @@
 version: "3.5"
 
-### NOTE - this file is used to generatee the Kubernetes pods
+### NOTE - this file is used to generate the Kubernetes pods
 # Enable any DID drivers we want to support.
 # If enabling drivers, check if special config needs to be uncommented in ci/scripts/driver-config.yaml
 # or entrypoint.sh (e.g. bitcr)
@@ -85,10 +85,10 @@ services:
   #    image: sphereon/driver-did-factom:latest
   #    ports:
   #      - "8097:8080"
-  driver-did-key:
-    image: universalresolver/driver-did-key:latest
-    ports:
-      - "8098:8080"
+#  driver-did-key:
+#    image: universalresolver/driver-did-key:latest
+#    ports:
+#      - "8098:8080"
   #  dock-did-driver:
   #    image: docknetwork/dock-did-driver:latest
   #    ports:
@@ -200,8 +200,8 @@ services:
   driver-didkit:
     image: ghcr.io/spruceid/didkit-http:latest
     environment:
-      PORT: 8080
-      HOST: 0.0.0.0
+      PORT: "8080"
+      HOST: "0.0.0.0"
     ports:
       - "8121:8080"
 #  eosio-driver:

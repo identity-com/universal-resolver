@@ -39,6 +39,7 @@ spec:
           capabilities:
             drop:
               - NET_RAW
+        {{environmentVariables}}
       {{configMapVolume}}
 
 ---
