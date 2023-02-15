@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: uni-resolver-web
-        image: identitydotcom/uni-resolver-web
+        image: universalresolver/uni-resolver-web
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

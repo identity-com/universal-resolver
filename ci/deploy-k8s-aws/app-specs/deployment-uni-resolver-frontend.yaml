@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: uni-resolver-frontend
-        image: identitydotcom/universal-resolver-frontend
+        image: universalresolver/universal-resolver-frontend
         imagePullPolicy: Always
         ports:
         - containerPort: 7081
