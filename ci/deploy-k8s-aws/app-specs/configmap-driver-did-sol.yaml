@@ -6,7 +6,7 @@ data:
   config.json: |
     {
       "solanaRpcNodes": {
-        "mainnet-beta": "https://rough-misty-night.solana-mainnet.quiknode.pro/b57300ff234c12e95763e9b8cda67e9d86772a0d",
-        "devnet": "https://rough-misty-night.solana-devnet.quiknode.pro/b57300ff234c12e95763e9b8cda67e9d86772a0d" 
+        "mainnet-beta": "https://twilight-small-flower.solana-mainnet.quiknode.pro/ec921b46257fea7637f4caed5780c80d49f4ab26",
+        "devnet": "https://flashy-frosty-needle.solana-devnet.quiknode.pro/5b2ffc39b7ba4b592c3f0a8c92cd0df066a95838"
       }
     }
