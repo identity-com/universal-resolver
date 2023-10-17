@@ -7,7 +7,7 @@ metadata:
     app: uni-resolver
     type: backend
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: uni-resolver-web
