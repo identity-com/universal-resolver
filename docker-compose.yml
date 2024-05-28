@@ -234,3 +234,7 @@ services:
 #    image: igrantio/uni-resolver-driver-did-mydata:1.0
 #    ports:
 #      - "8126:8080"
+  driver-did-icp:
+    image: civicteam/driver-did-icp:latest
+    ports:
+      - "8127:8080"
