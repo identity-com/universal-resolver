@@ -85,10 +85,10 @@ services:
   #    image: sphereon/driver-did-factom:latest
   #    ports:
   #      - "8097:8080"
-#  driver-did-key:
-#    image: universalresolver/driver-did-key:latest
-#    ports:
-#      - "8098:8080"
+  driver-did-key:
+    image: universalresolver/driver-did-key:latest
+    ports:
+      - "8098:8080"
   #  dock-did-driver:
   #    image: docknetwork/dock-did-driver:latest
   #    ports:
