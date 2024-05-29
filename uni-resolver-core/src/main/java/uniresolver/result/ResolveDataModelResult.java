@@ -1,6 +1,7 @@
 package uniresolver.result;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DIDDocument;
@@ -40,7 +41,7 @@ public class ResolveDataModelResult extends ResolveResult implements Result {
 	 */
 
 	@JsonCreator
-	public static ResolveDataModelResult build(@JsonProperty(value="didResolutionMetadata", required=false) Map<String, Object> didResolutionMetadata, @JsonProperty(value="didDocument", required=false) DIDDocument didDocument, @JsonProperty(value="didDocumentMetadata", required=false) Map<String, Object> didDocumentMetadata) {
+	public static ResolveDataModelResult build(@JsonProperty(value="didResolutionMetadata") Map<String, Object> didResolutionMetadata, @JsonProperty(value="didDocument") DIDDocument didDocument, @JsonProperty(value="didDocumentMetadata") Map<String, Object> didDocumentMetadata) {
 		return new ResolveDataModelResult(didResolutionMetadata, didDocument, didDocumentMetadata);
 	}
 
@@ -62,7 +63,9 @@ public class ResolveDataModelResult extends ResolveResult implements Result {
 
 	private static boolean isJson(byte[] bytes) {
 		try {
-			return objectMapper.getFactory().createParser(bytes).readValueAsTree() != null;
+			try (JsonParser jsonParser = objectMapper.getFactory().createParser(bytes)) {
+				return jsonParser.readValueAsTree() != null;
+			}
 		} catch (IOException ex) {
 			return false;
 		}

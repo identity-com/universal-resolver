@@ -1,6 +1,7 @@
 package uniresolver.result;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.DecoderException;
@@ -49,7 +50,7 @@ public class DereferenceResult implements Result, StreamResult {
 	 */
 
 	@JsonCreator
-	public static DereferenceResult build(@JsonProperty(value="dereferencingMetadata", required=false) Map<String, Object> dereferencingMetadata, @JsonProperty(value="contentStream", required=true) byte[] contentStream, @JsonProperty(value="contentMetadata", required=false) Map<String, Object> contentMetadata) {
+	public static DereferenceResult build(@JsonProperty(value="dereferencingMetadata") Map<String, Object> dereferencingMetadata, @JsonProperty(value="contentStream", required=true) byte[] contentStream, @JsonProperty(value="contentMetadata") Map<String, Object> contentMetadata) {
 		return new DereferenceResult(dereferencingMetadata, contentStream, contentMetadata);
 	}
 
@@ -71,7 +72,9 @@ public class DereferenceResult implements Result, StreamResult {
 
 	private static boolean isJson(byte[] bytes) {
 		try {
-			return objectMapper.getFactory().createParser(bytes).readValueAsTree() != null;
+			try (JsonParser jsonParser = objectMapper.getFactory().createParser(bytes)) {
+				return jsonParser.readValueAsTree() != null;
+			}
 		} catch (IOException ex) {
 			return false;
 		}

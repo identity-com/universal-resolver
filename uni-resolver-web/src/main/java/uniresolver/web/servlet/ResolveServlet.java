@@ -1,16 +1,17 @@
 package uniresolver.web.servlet;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import uniresolver.ResolutionException;
 import uniresolver.driver.util.HttpBindingServerUtil;
+import uniresolver.driver.util.MediaTypeUtil;
 import uniresolver.result.ResolveRepresentationResult;
 import uniresolver.result.ResolveResult;
 import uniresolver.web.WebUniResolver;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -41,11 +42,11 @@ public class ResolveServlet extends WebUniResolver {
 		if (log.isDebugEnabled()) log.debug("Incoming resolve request: " + requestPath);
 
 		if (path.isEmpty()) {
-			ServletUtil.sendResponse(response, HttpServletResponse.SC_BAD_REQUEST, null, "No identifier found in resolve request.");
+			ServletUtil.sendResponse(response, HttpServletResponse.SC_BAD_REQUEST, "No identifier found in resolve request.");
 			return;
 		}
 
-		// look at path
+		// incomding DID and resolution options
 
 		String didString;
 		Map<String, Object> resolutionOptions = new HashMap<>();
@@ -64,7 +65,7 @@ public class ResolveServlet extends WebUniResolver {
 			if (request.getQueryString() != null) didString += "?" + request.getQueryString();
 		}
 
-		if (log.isInfoEnabled()) log.info("Incoming DID string: " + didString);
+		if (log.isInfoEnabled()) log.info("Incoming DID string: " + didString + ", incoming DID resolution options: " + resolutionOptions);
 
 		// prepare resolution options
 
@@ -73,8 +74,9 @@ public class ResolveServlet extends WebUniResolver {
 
 		List<MediaType> httpAcceptMediaTypes = MediaType.parseMediaTypes(httpAcceptHeader != null ? httpAcceptHeader : ResolveResult.MEDIA_TYPE);
 		MediaType.sortBySpecificityAndQuality(httpAcceptMediaTypes);
+		if (httpAcceptHeader != null) resolutionOptions.put("_http_accept", httpAcceptMediaTypes);
 
-		String accept = HttpBindingServerUtil.acceptForHttpAcceptMediaTypes(httpAcceptMediaTypes);
+		String accept = HttpBindingServerUtil.acceptForHttpAccepts(httpAcceptMediaTypes);
 		if (!resolutionOptions.containsKey("accept")) {
 			resolutionOptions.put("accept", accept);
 		}
@@ -103,9 +105,9 @@ public class ResolveServlet extends WebUniResolver {
 
 		for (MediaType httpAcceptMediaType : httpAcceptMediaTypes) {
 
-			if (HttpBindingServerUtil.isMediaTypeAcceptable(httpAcceptMediaType, ResolveResult.MEDIA_TYPE)) {
+			if (MediaTypeUtil.isMediaTypeAcceptable(httpAcceptMediaType, ResolveResult.MEDIA_TYPE)) {
 
-				if (log.isDebugEnabled()) log.debug("Supporting HTTP media type " + httpAcceptMediaType + " via content type " + ResolveResult.MEDIA_TYPE);
+				if (log.isDebugEnabled()) log.debug("Supporting HTTP media type " + httpAcceptMediaType + " via default content type " + ResolveResult.MEDIA_TYPE);
 
 				ServletUtil.sendResponse(
 						response,
@@ -113,11 +115,11 @@ public class ResolveServlet extends WebUniResolver {
 						ResolveResult.MEDIA_TYPE,
 						HttpBindingServerUtil.toHttpBodyStreamResult(resolveRepresentationResult));
 				return;
-			} else {
+			} else if (resolveRepresentationResult.getContentType() != null) {
 
 				// determine representation media type
 
-				if (HttpBindingServerUtil.isMediaTypeAcceptable(httpAcceptMediaType, resolveRepresentationResult.getContentType())) {
+				if (MediaTypeUtil.isMediaTypeAcceptable(httpAcceptMediaType, resolveRepresentationResult.getContentType())) {
 					if (log.isDebugEnabled()) log.debug("Supporting HTTP media type " + httpAcceptMediaType + " via content type " + resolveRepresentationResult.getContentType());
 				} else {
 					if (log.isDebugEnabled()) log.debug("Not supporting HTTP media type " + httpAcceptMediaType);
@@ -137,7 +139,6 @@ public class ResolveServlet extends WebUniResolver {
 		ServletUtil.sendResponse(
 				response,
 				HttpServletResponse.SC_NOT_ACCEPTABLE,
-				null,
 				"Not acceptable media types " + httpAcceptHeader);
 	}
 }

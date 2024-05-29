@@ -1,19 +1,19 @@
 package uniresolver.driver.servlet;
 
 import foundation.identity.did.DID;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import uniresolver.ResolutionException;
 import uniresolver.driver.util.HttpBindingServerUtil;
+import uniresolver.driver.util.MediaTypeUtil;
 import uniresolver.result.ResolveRepresentationResult;
 import uniresolver.result.ResolveResult;
-import uniresolver.util.HttpBindingUtil;
 
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -50,7 +50,7 @@ public class ResolveServlet extends HttpServlet implements Servlet {
 
 		if (identifier == null) {
 
-			ServletUtil.sendResponse(response, HttpServletResponse.SC_BAD_REQUEST, null, "Driver: No identifier found in resolve request.");
+			ServletUtil.sendResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Driver: No identifier found in resolve request.");
 			return;
 		}
 
@@ -66,7 +66,7 @@ public class ResolveServlet extends HttpServlet implements Servlet {
 		List<MediaType> httpAcceptMediaTypes = MediaType.parseMediaTypes(httpAcceptHeader != null ? httpAcceptHeader : ResolveResult.MEDIA_TYPE);
 		MediaType.sortBySpecificityAndQuality(httpAcceptMediaTypes);
 
-		String accept = HttpBindingServerUtil.acceptForHttpAcceptMediaTypes(httpAcceptMediaTypes);
+		String accept = HttpBindingServerUtil.acceptForHttpAccepts(httpAcceptMediaTypes);
 
 		Map<String, Object> resolutionOptions = new HashMap<>();
 		resolutionOptions.put("accept", accept);
@@ -95,7 +95,7 @@ public class ResolveServlet extends HttpServlet implements Servlet {
 
 		for (MediaType httpAcceptMediaType : httpAcceptMediaTypes) {
 
-			if (HttpBindingServerUtil.isMediaTypeAcceptable(httpAcceptMediaType, ResolveResult.MEDIA_TYPE)) {
+			if (MediaTypeUtil.isMediaTypeAcceptable(httpAcceptMediaType, ResolveResult.MEDIA_TYPE)) {
 
 				if (log.isDebugEnabled()) log.debug("Supporting HTTP media type " + httpAcceptMediaType + " via content type " + ResolveResult.MEDIA_TYPE);
 
@@ -109,9 +109,8 @@ public class ResolveServlet extends HttpServlet implements Servlet {
 
 				// determine representation media type
 
-				String representationMediaType = HttpBindingUtil.representationMediaTypeForMediaType(httpAcceptMediaType.toString());
-				if (representationMediaType != null) {
-					if (log.isDebugEnabled()) log.debug("Supporting HTTP media type " + httpAcceptMediaType + " via DID document representation media type " + representationMediaType);
+				if (MediaTypeUtil.isMediaTypeAcceptable(httpAcceptMediaType, resolveRepresentationResult.getContentType())) {
+					if (log.isDebugEnabled()) log.debug("Supporting HTTP media type " + httpAcceptMediaType + " via content type " + resolveRepresentationResult.getContentType());
 				} else {
 					if (log.isDebugEnabled()) log.debug("Not supporting HTTP media type " + httpAcceptMediaType);
 					continue;
@@ -130,8 +129,6 @@ public class ResolveServlet extends HttpServlet implements Servlet {
 		ServletUtil.sendResponse(
 				response,
 				HttpServletResponse.SC_NOT_ACCEPTABLE,
-				null,
 				"Not acceptable media types " + httpAcceptHeader);
-		return;
 	}
 }

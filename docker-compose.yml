@@ -1,4 +1,4 @@
-version: "3.5"
+version: "3.6"
 
 networks:
   default:
@@ -9,6 +9,73 @@ services:
     image: universalresolver/uni-resolver-web:latest
     ports:
       - "8080:8080"
+    environment:
+      # Override default driver URLs if they are set in .env variables, otherwise
+      # don't define the variables and let uni-resolver-web container use its default
+      # set in application.yml.
+      # See https://docs.docker.com/compose/compose-file/05-services/#environment
+      uniresolver_web_driver_url_did_btcr:
+      uniresolver_web_driver_url_did_sov:
+      uniresolver_web_driver_url_did_indy:
+      uniresolver_web_driver_url_did_v1_nym:
+      uniresolver_web_driver_url_did_v1_test_nym:
+      uniresolver_web_driver_url_did_stack:
+      uniresolver_web_driver_url_did_web:
+      uniresolver_web_driver_url_did_ethr:
+      uniresolver_web_driver_url_did_ens:
+      uniresolver_web_driver_url_did_peer:
+      uniresolver_web_driver_url_did_eosio:
+      uniresolver_web_driver_url_did_jolo:
+      uniresolver_web_driver_url_did_hcr:
+      uniresolver_web_driver_url_did_elem_ropsten:
+      uniresolver_web_driver_url_did_github:
+      uniresolver_web_driver_url_did_ccp:
+      uniresolver_web_driver_url_did_ont:
+      uniresolver_web_driver_url_did_kilt:
+      uniresolver_web_driver_url_did_factom:
+      uniresolver_web_driver_url_did_io:
+      uniresolver_web_driver_url_did_bba:
+      uniresolver_web_driver_url_did_schema:
+      uniresolver_web_driver_url_did_ion:
+      uniresolver_web_driver_url_did_ace:
+      uniresolver_web_driver_url_did_gatc:
+      uniresolver_web_driver_url_did_icon:
+      uniresolver_web_driver_url_did_vaa:
+      uniresolver_web_driver_url_did_unisot:
+      uniresolver_web_driver_url_did_sol:
+      uniresolver_web_driver_url_did_lit:
+      uniresolver_web_driver_url_did_ebsi:
+      uniresolver_web_driver_url_did_emtrust:
+      uniresolver_web_driver_url_did_meta:
+      uniresolver_web_driver_url_did_kit:
+      uniresolver_web_driver_url_did_key:
+      uniresolver_web_driver_url_did_orb:
+      uniresolver_web_driver_url_did_oyd:
+      uniresolver_web_driver_url_did_moncon:
+      uniresolver_web_driver_url_did_dock:
+      uniresolver_web_driver_url_did_mydata:
+      uniresolver_web_driver_url_did_dns:
+      uniresolver_web_driver_url_did_everscale:
+      uniresolver_web_driver_url_did_ala_quor_redt:
+      uniresolver_web_driver_url_did_cheqd:
+      uniresolver_web_driver_url_did_com:
+      uniresolver_web_driver_url_did_dyne:
+      uniresolver_web_driver_url_did_jwk:
+      uniresolver_web_driver_url_did_kscirc:
+      uniresolver_web_driver_url_did_iscc:
+      uniresolver_web_driver_url_did_ev:
+      uniresolver_web_driver_url_did_iid:
+      uniresolver_web_driver_url_did_evan:
+      uniresolver_web_driver_url_did_bid:
+      uniresolver_web_driver_url_did_polygonid:
+      uniresolver_web_driver_url_did_pdc:
+      uniresolver_web_driver_url_did_tys:
+      uniresolver_web_driver_url_did_plc:
+      uniresolver_web_driver_url_did_evrc:
+      uniresolver_web_driver_url_did_kerri:
+      uniresolver_web_driver_url_did_webs:
+      uniresolver_web_driver_url_did_content:
+
   driver-did-btcr:
     image: universalresolver/driver-did-btcr:latest
     environment:
@@ -25,11 +92,12 @@ services:
       uniresolver_driver_did_sov_libIndyPath: ${uniresolver_driver_did_sov_libIndyPath}
       uniresolver_driver_did_sov_poolConfigs: ${uniresolver_driver_did_sov_poolConfigs}
       uniresolver_driver_did_sov_poolVersions: ${uniresolver_driver_did_sov_poolVersions}
-      uniresolver_driver_did_sov_walletName: ${uniresolver_driver_did_sov_walletName}
+      uniresolver_driver_did_sov_walletNames: ${uniresolver_driver_did_sov_walletNames}
+      uniresolver_driver_did_sov_submitterDidSeeds: ${uniresolver_driver_did_sov_submitterDidSeeds}
     ports:
       - "8082:8080"
   uni-resolver-driver-did-uport:
-    image: uport/uni-resolver-driver-did-uport:2.4.0
+    image: uport/uni-resolver-driver-did-uport:5.0.0
     ports:
       - "8083:8081"
   driver-did-stack:
@@ -54,27 +122,28 @@ services:
     image: universalresolver/driver-did-ccp:latest
     ports:
       - "8091:8080"
-  work-did-driver:
-    image: didwork/work-did-driver:latest
-    environment:
-      uniresolver_driver_did_work_apikey: ${uniresolver_driver_did_work_apikey}
-      uniresolver_driver_did_work_domain: ${uniresolver_driver_did_work_domain}
-    ports:
-      - "8092:8080"
   ontid-driver:
     image: ontio/ontid-driver:latest
     ports:
       - "8093:8080"
   kilt-did-driver:
-    image: kiltprotocol/kilt-did-driver:2.4.1
+    image: kiltprotocol/kilt-did-driver:2.5.0
     environment:
       KILT_BLOCKCHAIN_NODE: ${uniresolver_driver_kilt_blockchain_node}
     ports:
       - "8094:8080"
+  evan-did-driver:
+    image: evannetwork/evan-did-driver:latest
+    ports:
+      - "8095:8080"
   uni-resolver-driver-did-factom:
     image: sphereon/uni-resolver-driver-did-factom:latest
     ports:
       - "8097:8080"
+  driver-did-key:
+    image: universalresolver/driver-did-key:latest
+    ports:
+      - "8098:8080"
   uni-resolver-did-v1-driver:
     image: veresone/uni-resolver-did-v1-driver:latest
     ports:
@@ -100,13 +169,6 @@ services:
     image: identityfoundation/driver-did-ion:v0.8.1
     ports:
       - "8111:8080"
-  ace-did-driver:
-    container_name: ace-did-driver
-    image: aceblock/ace-did-driver:latest
-    environment:
-      UNIRESOLVER_DRIVER_DID_ACE: ${UNIRESOLVER_DRIVER_DID_ACE}
-    ports:
-      - "8112:8080"
   gataca-did-resolver-driver:
     container_name: gataca-did-resolver-driver
     image: gatacaid/universal-resolver-driver:2.0.0
@@ -129,7 +191,7 @@ services:
     ports:
       - "8116:8080"
   driver-did-sol:
-    image: identitydotcom/driver-did-sol:1.0.0
+    image: identitydotcom/driver-did-sol:3.3.0
     ports:
       - "8118:8080"
   driver-did-lit:
@@ -146,10 +208,10 @@ services:
   driver-didkit:
     image: ghcr.io/spruceid/didkit-http:latest
     environment:
-      PORT: 8080
+      PORT: 3000
       HOST: 0.0.0.0
     ports:
-      - "8121:8080"
+      - "8121:3000"
   eosio-driver:
     container_name: eosio-driver
     image: gimlyblockchain/eosio-universal-resolver-driver
@@ -157,10 +219,11 @@ services:
       - "8123:8080"
   orb-did-driver:
     container_name: orb-did-driver
-    image: ghcr.io/trustbloc/orb-did-driver:v0.1.3
+    image: ghcr.io/trustbloc-cicd/orb-did-driver:v1.0.0-rc4-snapshot-7125f6a
     environment:
       ORB_DRIVER_HOST_URL: ${ORB_DRIVER_HOST_URL}
       ORB_DRIVER_TLS_SYSTEMCERTPOOL: ${ORB_DRIVER_TLS_SYSTEMCERTPOOL}
+      ORB_DRIVER_VERIFY_RESOLUTION_RESULT_TYPE: ${ORB_DRIVER_VERIFY_RESOLUTION_RESULT_TYPE}
     ports:
       - "8122:8121"
     command: start
@@ -173,19 +236,28 @@ services:
     ports:
       - "8125:8080"
   dock-did-driver:
-    image: docknetwork/dock-did-driver:latest
+    image: docknetwork/dock-did-driver:2.0.2
     ports:
       - "8099:8080"
   mydata-did-driver:
-    image: igrantio/uni-resolver-driver-did-mydata:1.0
+    image: igrantio/uni-resolver-driver-did-mydata:1.3
     ports:
       - "8126:8080"
   driver-did-dns:
     image: universalresolver/driver-did-dns:latest
+    environment:
+      uniresolver_driver_did_dns_dnsServers: ${uniresolver_driver_did_dns_dnsServers}
+      uniresolver_driver_did_dns_didKeyResolver: ${uniresolver_driver_did_dns_didKeyResolver}
     ports:
       - "8127:8080"
-  indy-did-driver:
-    image: ghcr.io/idunion/indy-did-resolver/indy-did-driver:latest
+  driver-did-indy:
+    image: universalresolver/driver-did-indy:latest
+    environment:
+      uniresolver_driver_did_indy_libIndyPath: ${uniresolver_driver_did_indy_libIndyPath}
+      uniresolver_driver_did_indy_poolConfigs: ${uniresolver_driver_did_indy_poolConfigs}
+      uniresolver_driver_did_indy_poolVersions: ${uniresolver_driver_did_indy_poolVersions}
+      uniresolver_driver_did_indy_walletNames: ${uniresolver_driver_did_indy_walletNames}
+      uniresolver_driver_did_indy_submitterDidSeeds: ${uniresolver_driver_did_indy_submitterDidSeeds}
     ports:
       - "8128:8080"
   everscale-did-driver:
@@ -197,12 +269,100 @@ services:
     ports:
       - "8130:8080"
   cheqd-did-driver:
-    image: ghcr.io/cheqd/did-resolver:v1.1.0
+    image: ghcr.io/cheqd/did-resolver:3.6.1
     ports:
-      - "8131:1313"
+      - "8131:8080"
+    environment:
+      MAINNET_ENDPOINT: "grpc.cheqd.net:443,true,5s"
+      TESTNET_ENDPOINT: "grpc.cheqd.network:443,true,5s"
+      LOG_LEVEL: "warn"
+      RESOLVER_LISTENER: "0.0.0.0:8080"
   driver-did-com:
     image: ghcr.io/commercionetwork/uni-resolver-driver-did-com:latest
     environment:
       uniresolver_driver_did_com_network: ${uniresolver_driver_did_com_network}
     ports:
       - "8132:8080"
+  did-driver-dyne:
+    image: dyne/w3c-did-driver:0.2
+    ports:
+      - "8133:8080"
+  did-jwk-driver:
+    image: transmute/restricted-resolver:latest
+    ports:
+      - "8134:8080"
+  did-kscirc-driver:
+    image: k4security/kschain-resolver:1.0
+    ports:
+      - "8135:8080"
+  driver-did-iscc:
+    image: ghcr.io/iscc/iscc-did-driver:main
+    ports:
+      - "8136:8080"
+  driver-did-ev:
+    image: ghcr.io/kaytrust/driver-did-ev:latest
+    environment:
+      NODE_HOST: ${uniresolver_driver_did_ev_node_url}
+      ADDRESS_IM: ${uniresolver_driver_did_ev_address_im}
+      BASE_BLOCKS: ${uniresolver_driver_did_ev_base_blocks}
+    ports:
+      - "8137:8000"
+  driver-did-iid:
+    image: zoeyian/driver-did-iid:latest
+    ports:
+      - "8138:8080"
+  driver-did-bid:
+    image: caictdevelop/driver-did-bid:latest
+    ports:
+      - "8139:8080"
+  driver-did-polygonid:
+    image: polygonid/driver-did-polygonid:v0.0.2
+    ports:
+      - "8141:8080"
+  driver-did-pdc:
+    image: w744219971/driver-did-pdc:latest
+    ports:
+      - "8142:8080"
+  driver-did-tys:
+    image: itpeoplecorp/tys-did-driver:latest
+    ports:
+      - "8143:8080"
+  driver-did-plc:
+    image: bnewbold/uni-resolver-driver-did-plc:0.0.1
+    ports:
+      - "8144:8000"
+  driver-did-evrc:
+    image: viitorcloud/uni-resolver-driver-did-evrc:latest
+    ports:
+      - "8145:8080"
+  driver-did-keri:
+    image: gleif/did-keri-resolver-service:latest
+    ports:
+      - "8146:7678"
+  driver-did-webs:
+    image: gleif/did-webs-resolver-service:latest
+    ports:
+      - "8147:7677"
+  driver-did-content:
+    image: kataru/content-did-driver:latest
+    ports:
+      - "8148:8888"
+  driver-did-algo:
+    image: ghcr.io/algorandfoundation/did-algo:v1.0.0
+    ports:
+      - "8149:9091"
+  driver-did-itn:
+    image: ghcr.io/itn-trust/driver-did-itn:1.0.0
+    ports:
+      - "8150:8080"
+    environment:
+      DID_RESOLVER_URL: ${uniresolver_driver_did_itn_resolverUrl}
+  driver-did-iota:
+    image: iotaledger/uni-resolver-driver-iota:0.1.1
+    ports:
+      - "8151:8080"
+    environment:
+      IOTA_NODE_ENDPOINT: ${uniresolver_driver_did_iota_iotaNodeEndpoint}
+      IOTA_SMR_NODE_ENDPOINT: ${uniresolver_driver_did_iota_smrNodeEndpoint}
+      IOTA_CUSTOM_NETWORK_NAME: ${uniresolver_driver_did_iota_customNetworkName}
+      IOTA_CUSTOM_NODE_ENDPOINT: ${uniresolver_driver_did_iota_customNodeEndpoint}

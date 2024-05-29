@@ -8,12 +8,12 @@
 	<parent>
 		<groupId>decentralized-identity</groupId>
 		<artifactId>uni-resolver</artifactId>
-		<version>0.8-SNAPSHOT</version>
+		<version>0.19-SNAPSHOT</version>
 	</parent>
 
     <properties>
-        <java.version>11</java.version>
-        <spring.boot.version>2.6.2</spring.boot.version>
+        <spring.boot.version>3.2.4</spring.boot.version>
+        <io.micrometer.micrometer-registry-prometheus.version>1.12.5</io.micrometer.micrometer-registry-prometheus.version>
     </properties>
 
 	<build>
@@ -48,9 +48,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+                <version>${io.micrometer.micrometer-registry-prometheus.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
-
 
     <dependencies>
         <dependency>

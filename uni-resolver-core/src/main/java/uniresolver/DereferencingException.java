@@ -8,8 +8,17 @@ import java.util.Map;
 
 public class DereferencingException extends Exception {
 
+	/*
+	 * From DID Core
+	 */
+
 	public static final String ERROR_INVALIDDIDURL = "invalidDidUrl";
 	public static final String ERROR_NOTFOUND = "notFound";
+
+	/*
+	 * From DID Resolution
+	 */
+
 	public static final String ERROR_CONTENTTYEPNOTSUPPORTED = "contentTypeNotSupported";
 	public static final String ERROR_INTERNALERROR = "internalError";
 
@@ -69,7 +78,7 @@ public class DereferencingException extends Exception {
 			DereferenceResult dereferenceResult = DereferenceResult.build();
 			if (this.getError() != null) dereferenceResult.setError(this.getError());
 			if (this.getMessage() != null) dereferenceResult.setErrorMessage(this.getMessage());
-			if (this.getDereferencingMetadata() != null) dereferenceResult.setDereferencingMetadata(this.getDereferencingMetadata());
+			if (this.getDereferencingMetadata() != null) dereferenceResult.getDereferencingMetadata().putAll(this.getDereferencingMetadata());
 			dereferenceResult.setContentStream(new byte[0]);
 			dereferenceResult.setContentType(contentType);
 			if (log.isDebugEnabled()) log.debug("Created error dereference result: " + dereferenceResult);

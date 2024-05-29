@@ -1,13 +1,13 @@
 package uniresolver.web.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.UniResolver;
 import uniresolver.web.WebUniResolver;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
 
@@ -39,7 +39,7 @@ public class MethodsServlet extends WebUniResolver {
 		} catch (Exception ex) {
 
 			if (log.isWarnEnabled()) log.warn("Resolver reported: " + ex.getMessage(), ex);
-			ServletUtil.sendResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null, "Resolver reported: " + ex.getMessage());
+			ServletUtil.sendResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Resolver reported: " + ex.getMessage());
 			return;
 		}
 
@@ -49,7 +49,7 @@ public class MethodsServlet extends WebUniResolver {
 
 		if (methods == null) {
 
-			ServletUtil.sendResponse(response, HttpServletResponse.SC_NOT_FOUND, null, "No methods.");
+			ServletUtil.sendResponse(response, HttpServletResponse.SC_NOT_FOUND, "No methods.");
 			return;
 		}
 

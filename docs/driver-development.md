@@ -14,9 +14,9 @@ Your driver will be invoked via an HTTP GET call to:
 
 `http://<your-image-url>/1.0/identifiers/<your-did>`
 
-Your driver will receive an `Accept` header with the value `application/ld+json`, and it should return either a valid [DID Document](https://w3c-ccg.github.io/did-resolution/#output-diddocument) or a [DID Resolution Result](https://w3c-ccg.github.io/did-resolution/#output-didresolutionresult) in the HTTP body. Your driver should also return an appropriate value in the `Content-Type` header, such as `application/did+ld+json`.
+Your driver will receive an `Accept` header with the value `application/ld+json`, and it should return either a valid [DID Document](https://w3c-ccg.github.io/did-resolution/#output-diddocument) or a [DID Resolution Result](https://w3c-ccg.github.io/did-resolution/#did-resolution-result) in the HTTP body. Your driver should also return an appropriate value in the `Content-Type` header, such as `application/did+ld+json`.
 
-A Swagger API definition is available [here](https://github.com/decentralized-identity/universal-resolver/blob/main/swagger/api-driver.yml).
+A Swagger API definition is available [here](https://github.com/decentralized-identity/universal-resolver/blob/main/openapi/openapi.yaml).
 
 For more information about this interface, see the [DID Resolution](https://w3c-ccg.github.io/did-resolution/) specification.
 
@@ -39,17 +39,18 @@ For more information about this interface, see the [DID Resolution](https://w3c-
 
 Create a PR that edits the following files in the Universal Resolver root directory and uni-resolver-web's [`application.yml`](https://github.com/decentralized-identity/universal-resolver/blob/main/uni-resolver-web/src/main/resources/application.yml):
 
-- `.env`
-  * list environment variables (if any) with default values
-- [`application.yml`](https://github.com/decentralized-identity/universal-resolver/blob/main/uni-resolver-web/src/main/resources/application.yml) (add your driver)
-  * pattern - regular expression for matching your DID method
-  * url - endpoint of your Docker image
-  * testIdentifiers - list of example DIDs that your driver can resolve
-- `docker-compose.yml` (add your driver)
+- [`docker-compose.yml`](https://github.com/decentralized-identity/universal-resolver/blob/main/docker-compose.yml) (add your driver, if it has a Docker image)
   * image - your Docker image name
   * ports - incremented port number exposed by your Docker image
   * environment - optional environment variables supported by your Docker image
-- `README.md` (insert a line to the driver table)
+  * uni-resolver-web service - add an `environment` variable for your drivers URL into the uni-resolver-web service definition at the top of this file. This can be used to inject the driver URL at runtime and override the default hard coded value in the application.yml. The variable name should follow the convention of `uniresolver_web_driver_url_did_<your-did-method-identifier>` to avoid conflicts.
+* [`application.yml`](https://github.com/decentralized-identity/universal-resolver/blob/main/uni-resolver-web/src/main/resources/application.yml) (add your driver)
+  * pattern - regular expression for matching your DID method
+  * url - this should be in the format of a [spring property placeholder](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config.files.property-placeholders) to allow possible injection of the URL at runtime. The placeholder should use the environment variable specified in the `docker-compose.yml` for your driver and provide a default endpoint of your Docker compose service name or external resolver endpoint. The general spring placeholder format to use is `${uniresolver_web_driver_url_did_<your-did-method-identifier>:<default-static-url>}`.
+  * testIdentifiers - list of example DIDs that your driver can resolve
+- [`.env`](https://github.com/decentralized-identity/universal-resolver/blob/main/.env)
+  * list environment variables (if any) with default values
+- [`README.md`](https://github.com/decentralized-identity/universal-resolver/blob/main/README.md) (insert a line to the driver table)
   * driver name (e.g. `did-example`), with link to driver source code
   * driver version (e.g. `0.1`), should match Docker image version
   * DID method spec version (e.g. `0.1`), with link to DID method spec (or mark "missing")
@@ -60,7 +61,7 @@ Your driver is expected to be well-documented, tested, and working before you su
 
 ### How to update a driver
 
-Contributors should keep their drivers up-to-date as changes happen to the DID Core spec and the DID method spec. Driver implementers may wish to use the `:latest` Docker image version, but should preferably use incremental Docker image versions.
+Contributors should keep their drivers up-to-date as changes happen to the DID Core spec and the DID method spec. Driver implementers MUST specify a Docker image version, and not use `:latest`.
 
 In order to update a driver, simply submit a new PR that increments the Docker image version and updates the relevant files (see above in the "How to contribute a driver" section).
 
@@ -96,6 +97,12 @@ To do so, follow these steps:
 
 - Make the required changes mentioned above ("How to contribute a driver") to the `.env`, [`application.yml`](https://github.com/decentralized-identity/universal-resolver/blob/main/uni-resolver-web/src/main/resources/application.yml) and `docker-compose.yml` files.
 
+- Pull remote docker images
+
+  ```bash
+    docker-compose -f docker-compose.yml pull
+  ```
+
 - Build uni-resolver-web locally:
 
   ```bash
@@ -105,9 +112,10 @@ To do so, follow these steps:
 - Run the uni-resolver-web locally:
 
   ```bash
-  docker-compose -f docker-compose.yml pull
   docker-compose -f docker-compose.yml up
   ```
+
+After each local change, you must rebuild uni-resolver-web locally. If you pull docker images, it will overwrite the local uni-resolver-web, so you must rebuild again after pulling.
 
 You can now resolve DID Documents via `curl` commands as documented in the [Quick Start](https://github.com/decentralized-identity/universal-resolver#quick-start) notes.
 

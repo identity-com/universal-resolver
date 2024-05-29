@@ -1,14 +1,14 @@
 package uniresolver.driver.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.Driver;
 
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
@@ -45,7 +45,7 @@ public class PropertiesServlet extends HttpServlet implements Servlet {
 		} catch (Exception ex) {
 
 			if (log.isWarnEnabled()) log.warn("Properties problem: " + ex.getMessage(), ex);
-			ServletUtil.sendResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null, "Properties problem: " + ex.getMessage());
+			ServletUtil.sendResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Properties problem: " + ex.getMessage());
 			return;
 		}
 
@@ -55,7 +55,7 @@ public class PropertiesServlet extends HttpServlet implements Servlet {
 
 		if (properties == null) {
 
-			ServletUtil.sendResponse(response, HttpServletResponse.SC_NOT_FOUND, null, "No properties.");
+			ServletUtil.sendResponse(response, HttpServletResponse.SC_NOT_FOUND, "No properties.");
 			return;
 		}
 

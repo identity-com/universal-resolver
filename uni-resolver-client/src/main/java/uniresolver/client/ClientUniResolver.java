@@ -15,18 +15,16 @@ import uniresolver.ResolutionException;
 import uniresolver.UniResolver;
 import uniresolver.result.ResolveRepresentationResult;
 import uniresolver.result.ResolveResult;
-import uniresolver.util.HttpBindingUtil;
+import uniresolver.util.HttpBindingClientUtil;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ClientUniResolver implements UniResolver {
 
-	private static Logger log = LoggerFactory.getLogger(ClientUniResolver.class);
+	private static final Logger log = LoggerFactory.getLogger(ClientUniResolver.class);
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -42,13 +40,13 @@ public class ClientUniResolver implements UniResolver {
 
 	public static ClientUniResolver create(URI baseUri) {
 
-		if (! baseUri.toString().endsWith("/")) baseUri = URI.create(baseUri.toString() + "/");
+		if (! baseUri.toString().endsWith("/")) baseUri = URI.create(baseUri + "/");
 
 		ClientUniResolver clientUniResolver = new ClientUniResolver();
-		clientUniResolver.setResolveUri(URI.create(baseUri.toString() + "identifiers"));
-		clientUniResolver.setPropertiesUri(URI.create(baseUri.toString() + "properties"));
-		clientUniResolver.setMethodsUri(URI.create(baseUri.toString() + "methods"));
-		clientUniResolver.setTestIdentifiersUri(URI.create(baseUri.toString() + "testIdentifiers"));
+		clientUniResolver.setResolveUri(URI.create(baseUri + "identifiers"));
+		clientUniResolver.setPropertiesUri(URI.create(baseUri + "properties"));
+		clientUniResolver.setMethodsUri(URI.create(baseUri + "methods"));
+		clientUniResolver.setTestIdentifiersUri(URI.create(baseUri + "testIdentifiers"));
 
 		return clientUniResolver;
 	}
@@ -99,8 +97,8 @@ public class ClientUniResolver implements UniResolver {
 			ContentType httpContentType = ContentType.get(httpResponse.getEntity());
 			Charset httpCharset = (httpContentType != null && httpContentType.getCharset() != null) ? httpContentType.getCharset() : HTTP.DEF_CONTENT_CHARSET;
 
-			if (log.isDebugEnabled()) log.debug("Response status from " + uriString + ": " + httpStatusCode + " " + httpStatusMessage);
-			if (log.isDebugEnabled()) log.debug("Response content type from " + uriString + ": " + httpContentType + " / " + httpCharset);
+			if (log.isDebugEnabled()) log.debug("Response HTTP status from " + uriString + ": " + httpStatusCode + " " + httpStatusMessage);
+			if (log.isDebugEnabled()) log.debug("Response HTTP content type from " + uriString + ": " + httpContentType + " / " + httpCharset);
 
 			// read result
 
@@ -108,10 +106,10 @@ public class ClientUniResolver implements UniResolver {
 			String httpBodyString = new String(httpBodyBytes, httpCharset);
 			EntityUtils.consume(httpEntity);
 
-			if (log.isDebugEnabled()) log.debug("Response body from " + uriString + ": " + httpBodyString);
+			if (log.isDebugEnabled()) log.debug("Response HTTP body from " + uriString + ": " + httpBodyString);
 
-			if ((httpContentType != null && HttpBindingUtil.isResolveResultContentType(httpContentType)) || HttpBindingUtil.isResolveResultContent(httpBodyString)) {
-				resolveRepresentationResult = HttpBindingUtil.fromHttpBodyResolveRepresentationResult(httpBodyString, httpContentType);
+			if ((httpContentType != null && ResolveResult.isResolveResultMediaType(httpContentType)) || HttpBindingClientUtil.isResolveResultHttpContent(httpBodyString)) {
+				resolveRepresentationResult = HttpBindingClientUtil.fromHttpBodyResolveRepresentationResult(httpBodyString, httpContentType);
 			}
 
 			if (httpStatusCode == 404 && resolveRepresentationResult == null) {
@@ -123,7 +121,7 @@ public class ClientUniResolver implements UniResolver {
 			}
 
 			if (httpStatusCode != 200 && resolveRepresentationResult == null) {
-				throw new ResolutionException(ResolutionException.ERROR_INTERNALERROR, "Cannot retrieve result for " + didString + ": " + httpStatusCode + " " + httpStatusMessage + " (" + httpBodyString + ")");
+				throw new ResolutionException(ResolutionException.ERROR_INTERNALERROR, "Cannot retrieve RESOLVE result for " + didString + ": " + httpStatusCode + " " + httpStatusMessage + " (" + httpBodyString + ")");
 			}
 
 			if (resolveRepresentationResult != null && resolveRepresentationResult.isErrorResult()) {
@@ -132,17 +130,17 @@ public class ClientUniResolver implements UniResolver {
 			}
 
 			if (resolveRepresentationResult == null) {
-				resolveRepresentationResult = HttpBindingUtil.fromHttpBodyDidDocument(httpBodyBytes, httpContentType);
+				resolveRepresentationResult = HttpBindingClientUtil.fromHttpBodyDidDocument(httpBodyBytes, httpContentType);
 			}
 		} catch (ResolutionException ex) {
 
 			throw ex;
 		} catch (Exception ex) {
 
-			throw new ResolutionException("Cannot retrieve resolve result for " + didString + " from " + uriString + ": " + ex.getMessage(), ex);
+			throw new ResolutionException("Cannot retrieve RESOLVE result for " + didString + " from " + uriString + ": " + ex.getMessage(), ex);
 		}
 
-		if (log.isDebugEnabled()) log.debug("Retrieved resolve result for " + didString + " (" + uriString + "): " + resolveRepresentationResult);
+		if (log.isDebugEnabled()) log.debug("Retrieved RESOLVE result for " + didString + " (" + uriString + "): " + resolveRepresentationResult);
 
 		// done
 

@@ -45,8 +45,8 @@ class Conversion {
             try {
                 RepresentationConsumer.Result result = representationConsumer.consume(didDocumentStream);
                 Map<String, Object> map = new LinkedHashMap<>();
-                map.putAll(result.representationSpecificEntries.get(contentType));
-                map.putAll(result.didDocument);
+                map.putAll(result.representationSpecificEntries().get(contentType));
+                map.putAll(result.didDocument());
                 didDocument = DIDDocument.fromMap(map);
             } catch (IOException ex) {
                 throw new ResolutionException("Problem during consumption of " + contentType + ": " + ex.getMessage(), ex);
@@ -68,7 +68,7 @@ class Conversion {
 
         // done
 
-        if (log.isDebugEnabled()) log.debug("Converted to resolve() result using consumer " + (representationConsumer == null ? null : representationConsumer.getClass()) + ": " + resolveRepresentationResult + " --------> " + resolveDataModelResult);
+        if (log.isTraceEnabled()) log.trace("Converted to resolve() result using consumer " + (representationConsumer == null ? null : representationConsumer.getClass()) + ": " + resolveRepresentationResult + " --------> " + resolveDataModelResult);
         return resolveDataModelResult;
     }
 
@@ -99,8 +99,8 @@ class Conversion {
 
             try {
                 RepresentationProducer.Result result = representationProducer.produce(didDocument.toMap(), null);
-                didDocumentStream = result.representation;
-                contentType = result.mediaType;
+                didDocumentStream = result.representation();
+                contentType = result.mediaType();
             } catch (IOException ex) {
                 throw new ResolutionException("Problem during production of " + mediaType + ": " + ex.getMessage(), ex);
             }
@@ -122,7 +122,7 @@ class Conversion {
 
         // done
 
-        if (log.isDebugEnabled()) log.debug("Converted to resolveRepresentation() result using producer " + (representationProducer == null ? null : representationProducer.getClass()) + ": " + resolveDataModelResult + " --------> " + resolveRepresentationResult);
+        if (log.isTraceEnabled()) log.trace("Converted to resolveRepresentation() result using producer " + (representationProducer == null ? null : representationProducer.getClass()) + ": " + resolveDataModelResult + " --------> " + resolveRepresentationResult);
         return resolveRepresentationResult;
     }
 }

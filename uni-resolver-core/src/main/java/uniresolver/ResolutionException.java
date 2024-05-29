@@ -10,9 +10,19 @@ import java.util.Map;
 
 public class ResolutionException extends Exception {
 
+	/*
+	 * From DID Core
+	 */
+
 	public static final String ERROR_INVALIDDID = "invalidDid";
 	public static final String ERROR_NOTFOUND = "notFound";
 	public static final String ERROR_REPRESENTATIONNOTSUPPORTED = "representationNotSupported";
+
+	/*
+	 * From DID Resolution
+	 */
+
+	public static final String ERROR_METHODNOTSUPPORTED = "methodNotSupported";
 	public static final String ERROR_INTERNALERROR = "internalError";
 
 	private static final Logger log = LoggerFactory.getLogger(ResolutionException.class);
@@ -79,7 +89,7 @@ public class ResolutionException extends Exception {
 			ResolveDataModelResult resolveDataModelResult = ResolveDataModelResult.build();
 			if (this.getError() != null) resolveDataModelResult.setError(this.getError());
 			if (this.getMessage() != null) resolveDataModelResult.setErrorMessage(this.getMessage());
-			if (this.getDidResolutionMetadata() != null) resolveDataModelResult.setDidResolutionMetadata(this.getDidResolutionMetadata());
+			if (this.getDidResolutionMetadata() != null) resolveDataModelResult.getDidResolutionMetadata().putAll(this.getDidResolutionMetadata());
 			resolveDataModelResult.setDidDocument(null);
 			if (log.isDebugEnabled()) log.debug("Created error resolve result: " + resolveDataModelResult);
 			return resolveDataModelResult;

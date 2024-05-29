@@ -16,7 +16,7 @@ import uniresolver.ResolutionException;
 import uniresolver.driver.Driver;
 import uniresolver.result.ResolveRepresentationResult;
 import uniresolver.result.ResolveResult;
-import uniresolver.util.HttpBindingUtil;
+import uniresolver.util.HttpBindingClientUtil;
 
 import java.io.IOException;
 import java.net.URI;
@@ -50,7 +50,7 @@ public class HttpDriver implements Driver {
 
 		// match string
 
-		String matchedString = null;
+		StringBuilder matchedString = null;
 
 		if (this.getPattern() != null) {
 
@@ -65,12 +65,12 @@ public class HttpDriver implements Driver {
 
 			if (matcher.groupCount() > 0) {
 
-				matchedString = "";
-				for (int i=1; i<=matcher.groupCount(); i++) if (matcher.group(i) != null) matchedString += matcher.group(i);
+				matchedString = new StringBuilder();
+				for (int i=1; i<=matcher.groupCount(); i++) if (matcher.group(i) != null) matchedString.append(matcher.group(i));
 			}
 		}
 
-		if (matchedString == null) matchedString = did.getDidString();
+		if (matchedString == null) matchedString = new StringBuilder(did.getDidString());
 		if (log.isDebugEnabled()) log.debug("Matched string: " + matchedString);
 
 		// set HTTP URI
@@ -79,10 +79,10 @@ public class HttpDriver implements Driver {
 
 		if (uriString.contains("$1")) {
 
-			uriString = uriString.replace("$1", matchedString);
+			uriString = uriString.replace("$1", matchedString.toString());
 		} else if (uriString.contains("$2")) {
 
-			uriString = uriString.replace("$2", URLEncoder.encode(matchedString, StandardCharsets.UTF_8));
+			uriString = uriString.replace("$2", URLEncoder.encode(matchedString.toString(), StandardCharsets.UTF_8));
 		} else {
 
 			if (! uriString.endsWith("/")) uriString += "/";
@@ -120,8 +120,8 @@ public class HttpDriver implements Driver {
 			ContentType httpContentType = ContentType.get(httpResponse.getEntity());
 			Charset httpCharset = (httpContentType != null && httpContentType.getCharset() != null) ? httpContentType.getCharset() : HTTP.DEF_CONTENT_CHARSET;
 
-			if (log.isDebugEnabled()) log.debug("Driver response status from " + uriString + ": " + httpStatusCode + " " + httpStatusMessage);
-			if (log.isDebugEnabled()) log.debug("Driver response content type from " + uriString + ": " + httpContentType + " / " + httpCharset);
+			if (log.isDebugEnabled()) log.debug("Driver response HTTP status from " + uriString + ": " + httpStatusCode + " " + httpStatusMessage);
+			if (log.isDebugEnabled()) log.debug("Driver response HTTP content type from " + uriString + ": " + httpContentType + " / " + httpCharset);
 
 			// read result
 
@@ -129,10 +129,10 @@ public class HttpDriver implements Driver {
 			String httpBodyString = new String(httpBodyBytes, httpCharset);
 			EntityUtils.consume(httpEntity);
 
-			if (log.isDebugEnabled()) log.debug("Driver response body from " + uriString + ": " + httpBodyString);
+			if (log.isDebugEnabled()) log.debug("Driver response HTTP body from " + uriString + ": " + httpBodyString);
 
-			if ((httpContentType != null && HttpBindingUtil.isResolveResultContentType(httpContentType)) || HttpBindingUtil.isResolveResultContent(httpBodyString)) {
-				resolveRepresentationResult = HttpBindingUtil.fromHttpBodyResolveRepresentationResult(httpBodyString, httpContentType);
+			if ((httpContentType != null && ResolveResult.isResolveResultMediaType(httpContentType)) || HttpBindingClientUtil.isResolveResultHttpContent(httpBodyString)) {
+				resolveRepresentationResult = HttpBindingClientUtil.fromHttpBodyResolveRepresentationResult(httpBodyString, httpContentType);
 			}
 
 			if (httpStatusCode == 404 && resolveRepresentationResult == null) {
@@ -153,7 +153,7 @@ public class HttpDriver implements Driver {
 			}
 
 			if (resolveRepresentationResult == null) {
-				resolveRepresentationResult = HttpBindingUtil.fromHttpBodyDidDocument(httpBodyBytes, httpContentType);
+				resolveRepresentationResult = HttpBindingClientUtil.fromHttpBodyDidDocument(httpBodyBytes, httpContentType);
 			}
 		} catch (ResolutionException ex) {
 
@@ -175,14 +175,9 @@ public class HttpDriver implements Driver {
 
 		// prepare properties
 
-		Map<String, Object> httpProperties = new HashMap<String, Object> ();
+		Map<String, Object> httpProperties = getHttpProperties();
 
-		if (this.getResolveUri() != null) httpProperties.put("resolveUri", this.getResolveUri().toString());
-		if (this.getPropertiesUri() != null) httpProperties.put("propertiesUri", this.getPropertiesUri().toString());
-		if (this.getPattern() != null) httpProperties.put("pattern", this.getPattern().toString());
-		if (this.getTestIdentifiers() != null) httpProperties.put("testIdentifiers", this.getTestIdentifiers());
-
-		Map<String, Object> properties = new HashMap<String, Object> ();
+		Map<String, Object> properties = new HashMap<>();
 		properties.put("http", httpProperties);
 
 		// remote properties
@@ -200,6 +195,16 @@ public class HttpDriver implements Driver {
 		// done
 
 		return properties;
+	}
+
+	private Map<String, Object> getHttpProperties() {
+		Map<String, Object> httpProperties = new HashMap<>();
+
+		if (this.getResolveUri() != null) httpProperties.put("resolveUri", this.getResolveUri().toString());
+		if (this.getPropertiesUri() != null) httpProperties.put("propertiesUri", this.getPropertiesUri().toString());
+		if (this.getPattern() != null) httpProperties.put("pattern", this.getPattern().toString());
+		if (this.getTestIdentifiers() != null) httpProperties.put("testIdentifiers", this.getTestIdentifiers());
+		return httpProperties;
 	}
 
 	public Map<String, Object> remoteProperties() throws ResolutionException {
