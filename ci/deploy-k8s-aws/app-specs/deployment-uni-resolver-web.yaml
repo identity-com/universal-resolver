@@ -30,6 +30,8 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10 # set high to avoid unnecessary pod restarts
 ---
 apiVersion: v1
 kind: Service
