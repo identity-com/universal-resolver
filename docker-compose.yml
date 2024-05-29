@@ -12,7 +12,10 @@ networks:
 
 services:
   uni-resolver-web:
-    image: universalresolver/uni-resolver-web:latest
+    # use the identitydotcom fork so that we can configure the methods as needed in application.yml
+    # NOTE - we only need this for unpublished methods, published methods should be supported by upstream already
+    # The only unpublished one we use at the moment is did:icp
+    image: identitydotcom/uni-resolver-web:latest
     ports:
       - "8080:8080"
   #  driver-did-btcr:
