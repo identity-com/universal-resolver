@@ -9,10 +9,10 @@ from shutil import copy
 import pathlib
 
 # CONSTANTS you may need to change:
-DEV_DOMAIN_NAME = 'dev.uniresolver.io'
-PROD_DOMAIN_NAME='resolver.identity.foundation'
+DEV_DOMAIN_NAME = 'did-dev.civic.com'
+PROD_DOMAIN_NAME='did.civic.com'
 UNIVERSAL_RESOLVER_FRONTEND_TAG = "universalresolver/uni-resolver-frontend:latest;"
-NAMESPACE = "uni-resolver"
+NAMESPACE = "did"
 
 
 def init_deployment_dir(outputdir):
@@ -48,15 +48,102 @@ def generate_deployment_specs(containers, outputdir):
     for container in containers:
         container_tag = containers[container]['image']
         container_port = get_container_port(containers[container]['ports'])
+        container_env = containers[container]['environment'] if 'environment' in containers[container] else None
         fin = open("k8s-template.yaml", "rt")
         deployment_file = "deployment-%s.yaml" % container
         fout = open(outputdir + '/' + deployment_file, "wt")
         print('Writing file: ' + outputdir + '/' + deployment_file + ' for container: ' + container)
         for line in fin:
             fout.write(line.replace('{{containerName}}', container).replace('{{containerTag}}', container_tag).replace('{{containerPort}}', container_port))
-        add_deployment(deployment_file, outputdir)
         fin.close()
         fout.close()
+
+        add_driver_environment_variables(outputdir, container_env, container)
+
+        # If there is a configmap-<driver>.yaml file, create a ConfigMap for it and add a volumeMounts mapping for it:
+        add_driver_configmap_volume(outputdir, container)
+        add_deployment(deployment_file, outputdir)
+
+def add_driver_environment_variables(outputdir, container_env, container):
+    """
+    If the container has environment variables defined in the docker-compose file,
+    add them here.
+    NOTE: This does not support variable substitution
+    """
+
+    deployment_file = "deployment-%s.yaml" % container
+    with open(outputdir + '/' + deployment_file, 'r') as infile:
+        input_deployment_contents = infile.read()
+
+    configmap_filename = 'configmap-%s.yaml' % container
+    configmap_path = '/app-specs/%s' % configmap_filename
+
+    if container_env is None:
+        print('No environment variables found for driver ' + container)
+        output_deployment_contents = input_deployment_contents.replace('{{environmentVariables}}', '')
+    else:
+        print('Environment variables found for driver ' + container + ' . Adding environment to the deployment yaml.')
+
+        # Write the environment definition to the driver Deployment spec:
+        env_txt = 'env:\n'
+
+        for env_var in container_env:
+            env_txt += '          - name: %s\n' % env_var
+            env_txt += '            value: \"%s\"\n' % container_env[env_var]
+
+        print(env_txt)
+
+        output_deployment_contents = input_deployment_contents.replace('{{environmentVariables}}', env_txt)
+
+        # tmp
+        print(output_deployment_contents)
+
+    with open(outputdir + '/' + deployment_file, 'w') as outfile:
+        outfile.write(output_deployment_contents)
+
+def add_driver_configmap_volume(outputdir, container):
+    """
+    If there is a file named /app-specs/configmap-<container>.yaml for this driver,
+    add a 'kubectl apply' command for it,
+    and add a 'volume' descriptor to the Deployment yaml, referencing the configmap.
+    NOTE: This currently only supports volumes, not environment variables.
+    """
+
+    deployment_file = "deployment-%s.yaml" % container
+    with open(outputdir + '/' + deployment_file, 'r') as infile:
+        input_deployment_contents = infile.read()
+
+    configmap_filename = 'configmap-%s.yaml' % container
+    configmap_path = '/app-specs/%s' % configmap_filename
+
+    if not os.path.exists(configmap_path):
+        print('No configmap file found for driver ' + container)
+        output_deployment_contents = input_deployment_contents.replace('{{configMapVolume}}', '')
+    else:
+        print('Configmap found for driver ' + container + ' . Adding configmap volume to the deployment yaml.')
+        # Copy the configmap definition and add a 'kubectl apply' command for it:
+        copy(configmap_path, outputdir + '/' + configmap_filename)
+        add_deployment(configmap_filename, outputdir)
+
+        # Write the volume mapping definition to the driver Deployment spec:
+        volume_name = 'configmap-volume-%s' % container
+        configmap_name = 'configmap-%s' % container
+
+        configmap_txt = '  volumeMounts:\n'
+        configmap_txt += '          - mountPath: /usr/src/app/config\n'
+        configmap_txt += '            name: ' + volume_name + '\n'
+        configmap_txt += '      volumes:\n'
+        configmap_txt += '        - configMap:\n'
+        configmap_txt += '            name: ' + configmap_name + '\n'
+        configmap_txt += '          name: ' + volume_name + '\n'
+
+        print(configmap_txt)
+
+        output_deployment_contents = input_deployment_contents.replace('{{configMapVolume}}', configmap_txt)
+
+    with open(outputdir + '/' + deployment_file, 'w') as outfile:
+        outfile.write(output_deployment_contents)
+
 
 
 def find_in_dir(key, dictionary):
@@ -92,16 +179,18 @@ def generate_ingress(containers, outputdir):
     fout.write('kind: Ingress\n')
     fout.write('metadata:\n')
     fout.write('  name: \"uni-resolver-ingress\"\n')
-    fout.write('  namespace: \"uni-resolver\"\n')
+    fout.write('  namespace: \"did\"\n')
     fout.write('  annotations:\n')
-    fout.write('    alb.ingress.kubernetes.io/scheme: internet-facing\n')
-    fout.write('    alb.ingress.kubernetes.io/certificate-arn: \"arn:aws:acm:us-east-2:332553390353:certificate/925fce37-d446-4af3-828e-f803b3746af0,arn:aws:acm:us-east-2:332553390353:certificate/59fa30ca-de05-4024-8f80-fea9ab9ab8bf\"\n')
-    fout.write('    alb.ingress.kubernetes.io/listen-ports: \'[{"HTTP": 80}, {"HTTPS":443}]\'\n')
-    fout.write('    alb.ingress.kubernetes.io/ssl-redirect: \'443\'\n')
+#     fout.write('    nginx.ingress.kubernetes.io/rewrite-target: /$2\n')
+    fout.write('    kubernetes.io/ingress.class: "nginx"\n')
+#     fout.write('    alb.ingress.kubernetes.io/scheme: internet-facing\n')
+#     fout.write('    alb.ingress.kubernetes.io/certificate-arn: \"arn:aws:acm:us-east-2:332553390353:certificate/925fce37-d446-4af3-828e-f803b3746af0,arn:aws:acm:us-east-2:332553390353:certificate/59fa30ca-de05-4024-8f80-fea9ab9ab8bf\"\n')
+#     fout.write('    alb.ingress.kubernetes.io/listen-ports: \'[{"HTTP": 80}, {"HTTPS":443}]\'\n')
+#     fout.write('    alb.ingress.kubernetes.io/ssl-redirect: \'443\'\n')
     fout.write('  labels:\n')
     fout.write('    app: \"uni-resolver-web\"\n')
     fout.write('spec:\n')
-    fout.write('  ingressClassName: alb\n')
+#     fout.write('  ingressClassName: alb\n')
     fout.write('  rules:\n')
     fout.write('    - host: ' + DEV_DOMAIN_NAME + '\n')
     fout.write('      http:\n')
@@ -137,7 +226,7 @@ def generate_ingress(containers, outputdir):
     fout.write('                name: uni-resolver-frontend\n')
     fout.write('                port:\n')
     fout.write('                  number: 7081\n')
-    
+
 
     # for container in containers:
     #     print(container)
@@ -159,7 +248,7 @@ def generate_ingress(containers, outputdir):
     #     fout.write('                name: ' + container + '\n')
     #     fout.write('                port:\n')
     #     fout.write('                  number: ' + container_port + '\n')
-        
+
     fout.close()
 
 
@@ -208,6 +297,10 @@ def main(argv):
 
     generate_ingress(containers, outputdir)
 
+    # Payer key for the sol did driver:
+    # NOTE: Before running this, the real key should be put into the yaml file.
+    copy('/app-specs/secret-driver-did-sol.yaml', outputdir)
+    add_deployment('secret-driver-did-sol.yaml', outputdir)
     # generate driver specs
     generate_deployment_specs(containers, outputdir)
 

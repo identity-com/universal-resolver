@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: uni-resolver-web
-  namespace: uni-resolver
+  namespace: did
   labels:
     app: uni-resolver
     type: backend
@@ -15,6 +15,7 @@ spec:
     metadata:
       labels:
         app: uni-resolver-web
+        fargate: "true"
     spec:
       containers:
         - name: uni-resolver-web

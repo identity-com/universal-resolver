@@ -2,33 +2,50 @@ name: AWS Kubernetes deployment
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Environment ( Dev / Prod )'
+        required: true
+        options:
+        - Dev
+        - Prod
+        default: 'Dev'
+
+env:
+  IMAGE_NAME: universalresolver/uni-resolver-web
+  PATH_TO_DOCKERFILE: uni-resolver-web/docker/Dockerfile
+  BUILD_CONTEXT: $GITHUB_WORKSPACE
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment }}
     steps:
     - uses: actions/checkout@master
 
-    - name: Import Secrets
-      uses: hashicorp/vault-action@v2.3.0
-      with:
-        url: ${{ secrets.VAULT_ADDR }}
-        token: ${{ secrets.CI_SECRET_READER_PERIODIC_TOKEN }}
-        caCertificate: ${{ secrets.VAULTCA }}
-        secrets: |
-          ci/data/gh-workflows/universal-resolver-cluster dif-cluster-kube-config | KUBE_CONFIG_DATA ;
-          ci/data/gh-workflows/universal-resolver-cluster aws-access-key-id | AWS_ACCESS_KEY_ID ;
-          ci/data/gh-workflows/universal-resolver-cluster aws-secret-access-key | AWS_SECRET_ACCESS_KEY ;
-          ci/data/gh-workflows/universal-resolver-cluster rpc-url-testnet | RPC_URL_TESTNET ;
-          ci/data/gh-workflows/universal-resolver-cluster rpc-cert-testnet | RPC_CERT_TESTNET ;
-          ci/data/gh-workflows/deployment-status slack-webhook-url | SLACK_WEBHOOK_URL
+#    - name: Import Secrets
+#      uses: hashicorp/vault-action@v2.3.0
+#      with:
+#        url: ${{ secrets.VAULT_ADDR }}
+#        token: ${{ secrets.CI_SECRET_READER_PERIODIC_TOKEN }}
+#        caCertificate: ${{ secrets.VAULTCA }}
+#        secrets: |
+#          ci/data/gh-workflows/universal-resolver-cluster dif-cluster-kube-config | KUBE_CONFIG_DATA ;
+#          ci/data/gh-workflows/universal-resolver-cluster aws-access-key-id | AWS_ACCESS_KEY_ID ;
+#          ci/data/gh-workflows/universal-resolver-cluster aws-secret-access-key | AWS_SECRET_ACCESS_KEY ;
+#          ci/data/gh-workflows/universal-resolver-cluster rpc-url-testnet | RPC_URL_TESTNET ;
+#          ci/data/gh-workflows/universal-resolver-cluster rpc-cert-testnet | RPC_CERT_TESTNET ;
+#          ci/data/gh-workflows/deployment-status slack-webhook-url | SLACK_WEBHOOK_URL
 
     - name: Deploy to AWS
       uses: ./ci/deploy-k8s-aws
       env:
-        KUBE_CONFIG_DATA: ${{secrets.KUBE_CONFIG_DATA_BASE64_UNI_RESOLVER_PROD}}
-        AWS_ACCESS_KEY_ID: ${{env.AWS_ACCESS_KEY_ID}}
-        AWS_SECRET_ACCESS_KEY: ${{env.AWS_SECRET_ACCESS_KEY}}
+        KUBE_CONFIG_DATA: ${{secrets.KUBE_CONFIG_DATA}}
+        AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+        AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+        ENVIRONMENT: ${{github.event.inputs.environment}}
         RPC_URL_TESTNET: ${{env.RPC_URL_TESTNET}}
         RPC_CERT_TESTNET: ${{env.RPC_CERT_TESTNET}}
 
