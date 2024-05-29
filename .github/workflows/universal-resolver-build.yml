@@ -1,0 +1,26 @@
+name: Build latest tag
+
+on:
+  pull_request:
+    paths-ignore:
+      - '.gitignore'
+      - 'docs/**'
+      - 'README.md'
+      - 'LICENSE'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Dev
+    steps:
+    - uses: actions/checkout@master
+    - name: Docker Build and Push
+      uses: ./ci/docker-build-push
+      env:
+        DOCKER_FILE: uni-resolver-web/docker/Dockerfile
+        CONTAINER_TAG: identitydotcom/uni-resolver-web:latest
+        DOCKER_USERNAME : ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD : ${{ secrets.DOCKER_PASSWORD }}

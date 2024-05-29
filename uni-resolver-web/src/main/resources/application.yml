@@ -333,3 +333,7 @@ uniresolver:
       url: ${uniresolver_web_driver_url_did_iota:http://driver-did-iota:8080/}
       testIdentifiers:
         - did:iota:0xf4d6f08f5a1b80dd578da7dc1b49c886d580acd4cf7d48119dfeb82b538ad88a
+    - pattern: "^(did:icp:.+)$"
+      url: http://driver-did-icp:8080/
+      testIdentifiers:
+        - did:icp:v0:un4fu-tqaaa-aaaab-qadjq-cai
