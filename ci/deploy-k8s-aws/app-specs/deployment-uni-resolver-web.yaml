@@ -19,7 +19,11 @@ spec:
     spec:
       containers:
         - name: uni-resolver-web
-          image: universalresolver/uni-resolver-web
+          # Use the identity.com Docker image for the Universal Resolver Web
+          # so that we can control the did methods supported - specifically add preview methods like "did:icp"
+          # not yet supported in the upstream.
+          # If we do not have any unofficial ones, we can and should use the upstream image instead
+          image: identitydotcom/uni-resolver-web
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
