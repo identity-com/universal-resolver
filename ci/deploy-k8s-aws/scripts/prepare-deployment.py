@@ -244,17 +244,27 @@ def generate_ingress(containers, outputdir, deploymentdomain):
     fout.close()
 
 
-def copy_app_deployment_specs(outputdir):
+def copy_app_deployment_specs(outputdir, deploymentdomain):
     print('#### Current python working path')
     working_path = pathlib.Path().absolute()
     print(working_path)
     # Configmap has to be deployed before the applications
-    copy('/app-specs/configmap-uni-resolver-frontend.yaml', outputdir + '/configmap-uni-resolver-frontend.yaml')
+    replace_and_copy('/app-specs/configmap-uni-resolver-frontend.yaml', outputdir + '/configmap-uni-resolver-frontend.yaml', 'backendUrl', deploymentdomain)
     add_deployment('configmap-uni-resolver-frontend.yaml', outputdir)
     copy('/app-specs/deployment-uni-resolver-frontend.yaml', outputdir + '/deployment-uni-resolver-frontend.yaml')
     add_deployment('deployment-uni-resolver-frontend.yaml', outputdir)
     copy('/app-specs/deployment-uni-resolver-web.yaml', outputdir + '/deployment-uni-resolver-web.yaml')
     add_deployment('deployment-uni-resolver-web.yaml', outputdir)
+
+def replace_and_copy(infile, outfile, templateKey, value):
+    fin = open(infile, "r")
+    fout = open(outfile, "w")
+    for line in fin:
+        print('Replacing ' + '{{' + templateKey + '}}' + ' with ' + value)
+        fout.write(line.replace('{{' + templateKey + '}}', value))
+    fout.close()
+    fin.close()
+
 
 def main(argv):
     print('#### Current python script path')
@@ -300,7 +310,7 @@ def main(argv):
     generate_deployment_specs(containers, outputdir)
 
     # copy app deployment specs
-    copy_app_deployment_specs(outputdir)
+    copy_app_deployment_specs(outputdir, deploymentdomain)
 
     # copy namespace files
     copy('/namespace/namespace-setup.yaml', './deploy/namespace-setup.yaml')
