@@ -197,7 +197,7 @@ services:
 #    ports:
 #      - "8116:8080"
   driver-did-sol:
-    image: identitydotcom/driver-did-sol:latest
+    image: civicteam/driver-did-sol:latest
     ports:
       - "8118:8080"
 #  driver-did-lit:
